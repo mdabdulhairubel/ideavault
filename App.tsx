@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Home, LayoutGrid, Calendar as CalendarIcon, Settings as SettingsIcon, Plus, Loader2 } from 'lucide-react';
 import { ViewType, Idea, Channel, Status, UserProfile } from './types.ts';
@@ -31,23 +32,52 @@ const App: React.FC = () => {
     type: 'soft' | 'permanent' | 'empty-bin';
   }>({ isOpen: false, ideaId: null, type: 'soft' });
 
-  // Handle keyboard visibility to prevent fixed nav from pushing up
+  // Advanced keyboard detection for mobile devices
   useEffect(() => {
+    // 1. Detect via Visual Viewport (Height change)
+    const handleViewportChange = () => {
+      if (window.visualViewport) {
+        // If the visible height is significantly less than the total window height,
+        // it's a very strong indicator that the keyboard is open.
+        const isLikelyKeyboard = window.visualViewport.height < window.innerHeight * 0.85;
+        setIsKeyboardVisible(isLikelyKeyboard);
+      }
+    };
+
+    // 2. Detect via Focus events (Immediate reaction)
     const handleFocusIn = (e: FocusEvent) => {
       const target = e.target as HTMLElement;
-      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
+      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) {
         setIsKeyboardVisible(true);
       }
     };
 
-    const handleFocusOut = () => {
-      setIsKeyboardVisible(false);
+    const handleFocusOut = (e: FocusEvent) => {
+      // Delay slightly to check if focus moved to another input
+      // This prevents the bottom bar from jumping if user taps "Next" on keyboard
+      setTimeout(() => {
+        const activeTag = document.activeElement?.tagName;
+        if (activeTag !== 'INPUT' && activeTag !== 'TEXTAREA' && !document.activeElement?.getAttribute('contenteditable')) {
+          handleViewportChange(); // Double check viewport before hiding
+        }
+      }, 150);
     };
 
+    // Listeners
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', handleViewportChange);
+      window.visualViewport.addEventListener('scroll', handleViewportChange);
+    }
+    window.addEventListener('resize', handleViewportChange);
     document.addEventListener('focusin', handleFocusIn);
     document.addEventListener('focusout', handleFocusOut);
     
     return () => {
+      if (window.visualViewport) {
+        window.visualViewport.removeEventListener('resize', handleViewportChange);
+        window.visualViewport.removeEventListener('scroll', handleViewportChange);
+      }
+      window.removeEventListener('resize', handleViewportChange);
       document.removeEventListener('focusin', handleFocusIn);
       document.removeEventListener('focusout', handleFocusOut);
     };
@@ -184,6 +214,7 @@ const App: React.FC = () => {
       status_id: newIdea.statusId,
       priority: newIdea.priority,
       tags: newIdea.tags || [],
+      // Fix: Use scheduledDate instead of scheduled_date to match the Idea type
       scheduled_date: newIdea.scheduledDate || null,
       is_deleted: false,
       user_id: session.user.id,
