@@ -23,12 +23,35 @@ const App: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingIdea, setEditingIdea] = useState<Idea | null>(null);
   const [selectedIdeaId, setSelectedIdeaId] = useState<string | null>(null);
+  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
   
   const [confirmModal, setConfirmModal] = useState<{
     isOpen: boolean;
     ideaId: string | null;
     type: 'soft' | 'permanent' | 'empty-bin';
   }>({ isOpen: false, ideaId: null, type: 'soft' });
+
+  // Handle keyboard visibility to prevent fixed nav from pushing up
+  useEffect(() => {
+    const handleFocusIn = (e: FocusEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
+        setIsKeyboardVisible(true);
+      }
+    };
+
+    const handleFocusOut = () => {
+      setIsKeyboardVisible(false);
+    };
+
+    document.addEventListener('focusin', handleFocusIn);
+    document.addEventListener('focusout', handleFocusOut);
+    
+    return () => {
+      document.removeEventListener('focusin', handleFocusIn);
+      document.removeEventListener('focusout', handleFocusOut);
+    };
+  }, []);
 
   const finalStatusId = useMemo(() => {
     if (statuses.length === 0) return '';
@@ -256,7 +279,7 @@ const App: React.FC = () => {
       <main className="flex-1 overflow-y-auto pb-24 pt-12 px-5 no-scrollbar">
         {renderContent()}
       </main>
-      {!selectedIdeaId && (
+      {!selectedIdeaId && !isKeyboardVisible && (
         <>
           <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-50">
             <button onClick={() => { setEditingIdea(null); setIsModalOpen(true); }} className="w-16 h-16 neon-btn text-black rounded-[28px] flex items-center justify-center border-4 border-[#0F1115] active:scale-90 transition-transform">
@@ -272,7 +295,7 @@ const App: React.FC = () => {
           </nav>
         </>
       )}
-      <IdeaModal isOpen={isModalOpen} onClose={() => { setIsModalOpen(false); setEditingIdea(null); }} onSave={addOrUpdateIdea} onDelete={editingIdea ? () => setConfirmModal({ isOpen: true, ideaId: editingIdea.id, type: 'soft' }) : undefined} channels={channels} statuses={statuses} initialIdea={editingIdea} />
+      <IdeaModal isOpen={isModalOpen} onClose={() => { setIsModalOpen(false); setEditingIdea(null); }} onSave={addOrUpdateIdea} channels={channels} statuses={statuses} initialIdea={editingIdea} />
       <ConfirmationModal isOpen={confirmModal.isOpen} title={confirmModal.type === 'soft' ? 'Move to Bin?' : confirmModal.type === 'empty-bin' ? 'Empty Bin?' : 'Delete Permanently?'} message={confirmModal.type === 'soft' ? 'This idea will be hidden from the pipeline. You can restore it later.' : confirmModal.type === 'empty-bin' ? 'All items in the recycle bin will be deleted forever.' : 'This action cannot be undone. The idea will be lost forever.'} confirmLabel={confirmModal.type === 'soft' ? 'Move to Bin' : confirmModal.type === 'empty-bin' ? 'Empty Bin' : 'Delete Forever'} onConfirm={handleConfirmAction} onCancel={() => setConfirmModal({ isOpen: false, ideaId: null, type: 'soft' })} />
     </div>
   );
