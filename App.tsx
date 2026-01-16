@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Home, LayoutGrid, Calendar as CalendarIcon, Settings as SettingsIcon, Plus, Loader2 } from 'lucide-react';
 import { ViewType, Idea, Channel, Status, UserProfile } from './types';
 import { supabase } from './services/supabase';
-import { DEFAULT_STATUSES, DEFAULT_CHANNELS } from './constants.tsx';
+import { DEFAULT_STATUSES, DEFAULT_CHANNELS } from './constants';
 import HomePage from './pages/Home';
 import ChannelsPage from './pages/Channels';
 import CalendarPage from './pages/Calendar';
