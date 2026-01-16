@@ -1,8 +1,9 @@
 
 import React, { useState, useMemo } from 'react';
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, addMonths, subMonths, isToday } from 'date-fns';
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Clock } from 'lucide-react';
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, addMonths, subMonths, isToday, startOfWeek, endOfWeek } from 'date-fns';
+import { ChevronLeft, ChevronRight, Plus, Search, Filter } from 'lucide-react';
 import { Idea, Channel } from '../types';
+import { IdeaCard } from './Home';
 
 interface CalendarProps {
   ideas: Idea[];
@@ -12,73 +13,65 @@ interface CalendarProps {
 
 const CalendarPage: React.FC<CalendarProps> = ({ ideas, channels, onIdeaClick }) => {
   const [currentMonth, setCurrentMonth] = useState(new Date());
-  const [selectedDay, setSelectedDay] = useState<Date | null>(new Date());
+  const [selectedDay, setSelectedDay] = useState<Date>(new Date());
 
   const days = useMemo(() => {
-    const start = startOfMonth(currentMonth);
-    const end = endOfMonth(currentMonth);
+    const start = startOfWeek(startOfMonth(currentMonth));
+    const end = endOfWeek(endOfMonth(currentMonth));
     return eachDayOfInterval({ start, end });
   }, [currentMonth]);
 
-  const scheduledIdeas = useMemo(() => 
-    ideas.filter(i => i.scheduledDate), [ideas]
+  const scheduledIdeas = useMemo(() => ideas.filter(i => i.scheduledDate), [ideas]);
+  const selectedDayIdeas = useMemo(() => 
+    scheduledIdeas.filter(i => isSameDay(new Date(i.scheduledDate!), selectedDay)), 
+    [scheduledIdeas, selectedDay]
   );
-
-  const selectedDayIdeas = useMemo(() => {
-    if (!selectedDay) return [];
-    return scheduledIdeas.filter(i => isSameDay(new Date(i.scheduledDate!), selectedDay));
-  }, [scheduledIdeas, selectedDay]);
-
-  const nextMonth = () => setCurrentMonth(addMonths(currentMonth, 1));
-  const prevMonth = () => setCurrentMonth(subMonths(currentMonth, 1));
 
   return (
     <div className="animate-in fade-in duration-500">
-      <header className="mb-6">
-        <h1 className="text-3xl font-extrabold tracking-tight">Schedule</h1>
-        <p className="text-zinc-500">Plan your upload calendar</p>
+      <header className="flex items-center justify-between mb-8">
+        <h1 className="text-2xl font-bold">Schedule</h1>
+        <div className="flex space-x-2">
+          <button className="w-10 h-10 rounded-xl bg-[#1C1F26] flex items-center justify-center text-zinc-400"><Search size={18} /></button>
+          <button className="w-10 h-10 rounded-xl bg-[#1C1F26] flex items-center justify-center text-zinc-400"><Filter size={18} /></button>
+        </div>
       </header>
 
-      {/* Monthly View */}
-      <div className="bg-zinc-900/50 rounded-3xl border border-zinc-800 overflow-hidden shadow-xl mb-6">
-        <div className="p-4 flex items-center justify-between border-b border-zinc-800">
-          <h2 className="text-lg font-bold text-zinc-100">{format(currentMonth, 'MMMM yyyy')}</h2>
-          <div className="flex space-x-2">
-            <button onClick={prevMonth} className="p-2 hover:bg-zinc-800 rounded-full text-zinc-400">
-              <ChevronLeft size={20} />
-            </button>
-            <button onClick={nextMonth} className="p-2 hover:bg-zinc-800 rounded-full text-zinc-400">
-              <ChevronRight size={20} />
-            </button>
-          </div>
+      <div className="bg-[#1C1F26] rounded-[32px] p-6 border border-white/5 mb-8 shadow-2xl">
+        <div className="flex items-center justify-between mb-8 px-2">
+          <button onClick={() => setCurrentMonth(subMonths(currentMonth, 1))} className="text-[#526DF1] p-1"><ChevronLeft size={24} /></button>
+          <h2 className="text-xl font-extrabold text-[#526DF1] tracking-tight">{format(currentMonth, 'MMMM')}</h2>
+          <button onClick={() => setCurrentMonth(addMonths(currentMonth, 1))} className="text-[#526DF1] p-1"><ChevronRight size={24} /></button>
         </div>
 
-        <div className="grid grid-cols-7 text-center py-2 bg-zinc-800/30">
-          {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map(d => (
-            <span key={d} className="text-[10px] font-bold text-zinc-500 uppercase">{d}</span>
+        <div className="grid grid-cols-7 mb-4">
+          {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => (
+            <span key={d} className="text-center text-[11px] font-bold text-zinc-600 uppercase tracking-tighter">{d}</span>
           ))}
         </div>
 
-        <div className="grid grid-cols-7 border-t border-zinc-800/50">
-          {days.map((day, i) => {
-            const hasIdeas = scheduledIdeas.some(idea => isSameDay(new Date(idea.scheduledDate!), day));
-            const active = selectedDay && isSameDay(day, selectedDay);
+        <div className="grid grid-cols-7 gap-y-2">
+          {days.map((day) => {
+            const isSelected = isSameDay(day, selectedDay);
+            const isCurrMonth = day.getMonth() === currentMonth.getMonth();
+            const hasIdeas = scheduledIdeas.some(i => isSameDay(new Date(i.scheduledDate!), day));
             const today = isToday(day);
 
             return (
               <button
                 key={day.toString()}
                 onClick={() => setSelectedDay(day)}
-                className={`h-14 relative flex flex-col items-center justify-center border-r border-b border-zinc-800/50 transition-all ${active ? 'bg-blue-600/20' : 'hover:bg-zinc-800/30'}`}
-                style={{ gridColumnStart: i === 0 ? day.getDay() + 1 : 'auto' }}
+                className="relative flex items-center justify-center py-2"
               >
-                <span className={`text-sm font-medium ${active ? 'text-blue-500' : today ? 'text-white underline decoration-blue-500 underline-offset-4' : 'text-zinc-400'}`}>
+                <div className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold transition-all
+                  ${isSelected ? 'bg-[#526DF1] text-white scale-110 shadow-[0_5px_15px_rgba(82,109,241,0.4)]' : 
+                    today ? 'text-[#526DF1] border border-[#526DF1]/30' : 
+                    isCurrMonth ? 'text-zinc-400' : 'text-zinc-800'}`}
+                >
                   {format(day, 'd')}
-                </span>
-                {hasIdeas && (
-                  <div className="mt-1 flex space-x-0.5">
-                    <div className="w-1.5 h-1.5 rounded-full bg-blue-500 shadow-sm shadow-blue-500/50" />
-                  </div>
+                </div>
+                {hasIdeas && !isSelected && (
+                  <div className="absolute bottom-1 w-1 h-1 rounded-full bg-[#526DF1]" />
                 )}
               </button>
             );
@@ -86,37 +79,27 @@ const CalendarPage: React.FC<CalendarProps> = ({ ideas, channels, onIdeaClick })
         </div>
       </div>
 
-      {/* Selected Day Details */}
-      <div className="space-y-4">
-        <h3 className="text-sm font-bold text-zinc-500 flex items-center uppercase tracking-widest px-1">
-          <Clock size={14} className="mr-2" />
-          {selectedDay ? format(selectedDay, 'EEEE, MMM do') : 'Select a date'}
-        </h3>
-        
-        {selectedDayIdeas.length > 0 ? (
-          selectedDayIdeas.map(idea => {
-            const channel = channels.find(c => c.id === idea.channelId);
-            return (
-              <button
-                key={idea.id}
-                onClick={() => onIdeaClick(idea)}
-                className="w-full flex items-center p-4 bg-zinc-900 border border-zinc-800 rounded-2xl text-left hover:border-zinc-700 active:scale-[0.98] transition-all"
-              >
-                <div className="w-2 h-10 rounded-full mr-4" style={{ backgroundColor: channel?.color || '#52525b' }} />
-                <div className="flex-1 min-w-0">
-                  <h4 className="font-bold text-white truncate">{idea.title}</h4>
-                  <p className="text-zinc-500 text-xs truncate">{channel?.name || 'Unknown Channel'}</p>
-                </div>
-                <ChevronRight size={18} className="text-zinc-700" />
-              </button>
-            );
-          })
-        ) : (
-          <div className="bg-zinc-900/30 border-2 border-dashed border-zinc-800 rounded-3xl py-12 text-center">
-            <CalendarIcon size={32} className="mx-auto text-zinc-700 mb-3" />
-            <p className="text-zinc-600 text-sm">Nothing scheduled for this day</p>
-          </div>
-        )}
+      <div className="space-y-6 pb-12">
+        <div className="flex items-center justify-between px-1">
+          <h3 className="text-lg font-bold">Planned Uploads</h3>
+          <button className="text-[#526DF1] p-1"><Plus size={20} /></button>
+        </div>
+
+        <div className="space-y-3">
+          {selectedDayIdeas.map(idea => (
+            <IdeaCard 
+              key={idea.id} 
+              idea={idea} 
+              onClick={() => onIdeaClick(idea)} 
+              channel={channels.find(c => c.id === idea.channelId)} 
+            />
+          ))}
+          {selectedDayIdeas.length === 0 && (
+            <div className="bg-[#1C1F26]/30 border border-dashed border-white/5 rounded-[24px] py-12 text-center">
+              <p className="text-zinc-600 text-sm">No uploads planned for this date</p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

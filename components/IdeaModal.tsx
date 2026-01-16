@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { X, Calendar, Hash, Trash2 } from 'lucide-react';
+import { X, Calendar, Trash2, ChevronDown, AlignLeft } from 'lucide-react';
 import { Idea, Channel, Status, Priority } from '../types';
 
 interface IdeaModalProps {
@@ -18,6 +18,7 @@ const IdeaModal: React.FC<IdeaModalProps> = ({
 }) => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  const [notes, setNotes] = useState('');
   const [channelId, setChannelId] = useState('');
   const [statusId, setStatusId] = useState('');
   const [priority, setPriority] = useState<Priority>('Medium');
@@ -27,16 +28,18 @@ const IdeaModal: React.FC<IdeaModalProps> = ({
     if (initialIdea) {
       setTitle(initialIdea.title);
       setDescription(initialIdea.description);
+      setNotes(initialIdea.notes || '');
       setChannelId(initialIdea.channelId);
       setStatusId(initialIdea.statusId);
       setPriority(initialIdea.priority);
       setScheduledDate(initialIdea.scheduledDate || '');
     } else {
-      setTitle('');
+      setTitle(''); 
       setDescription('');
+      setNotes('');
       setChannelId(channels[0]?.id || '');
       setStatusId(statuses[0]?.id || '');
-      setPriority('Medium');
+      setPriority('Medium'); 
       setScheduledDate('');
     }
   }, [initialIdea, isOpen, channels, statuses]);
@@ -45,91 +48,101 @@ const IdeaModal: React.FC<IdeaModalProps> = ({
 
   const handleSave = () => {
     if (!title.trim() || !channelId || !statusId) return;
-    onSave({
-      title,
-      description,
-      channelId,
-      statusId,
-      priority,
-      scheduledDate: scheduledDate || undefined,
+    onSave({ 
+      title, 
+      description, 
+      notes,
+      channelId, 
+      statusId, 
+      priority, 
+      scheduledDate: scheduledDate || undefined 
     });
   };
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-end justify-center">
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative w-full max-w-md bg-zinc-900 rounded-t-3xl p-6 shadow-2xl transition-transform animate-in slide-in-from-bottom duration-300">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold">{initialIdea ? 'Edit Idea' : 'Capture Idea'}</h2>
-          <button onClick={onClose} className="p-2 bg-zinc-800 rounded-full text-zinc-400">
-            <X size={20} />
-          </button>
+    <div className="fixed inset-0 z-[60] flex items-end justify-center px-4 pb-4">
+      <div className="absolute inset-0 bg-black/80 backdrop-blur-md" onClick={onClose} />
+      <div className="relative w-full max-w-md bg-[#16191F] rounded-[40px] p-8 shadow-2xl animate-in slide-in-from-bottom duration-300 border border-white/10 max-h-[90vh] overflow-y-auto no-scrollbar">
+        <div className="w-12 h-1.5 bg-zinc-800 rounded-full mx-auto mb-8 sticky top-0" />
+        
+        <div className="flex items-center justify-between mb-8">
+          <h2 className="text-2xl font-black">{initialIdea ? 'Edit Entry' : 'New Idea'}</h2>
+          <button onClick={onClose} className="p-2 text-zinc-500"><X size={24} /></button>
         </div>
 
-        <div className="space-y-4">
-          <input
-            type="text"
-            placeholder="Idea Title"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            className="w-full bg-zinc-800 border-none rounded-xl p-4 text-zinc-100 placeholder-zinc-500 focus:ring-2 focus:ring-blue-600 outline-none"
-          />
+        <div className="space-y-6">
+          <section>
+            <label className="text-[10px] font-black text-zinc-600 uppercase mb-2 block tracking-widest">Topic Title</label>
+            <input
+              autoFocus
+              type="text"
+              placeholder="What's the topic?"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className="w-full bg-zinc-900 border-none rounded-2xl p-4 text-lg font-bold placeholder-zinc-700 outline-none focus:ring-2 focus:ring-[#526DF1]/50"
+            />
+          </section>
 
-          <textarea
-            placeholder="Notes (Description, links, etc.)"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            className="w-full bg-zinc-800 border-none rounded-xl p-4 text-zinc-100 placeholder-zinc-500 focus:ring-2 focus:ring-blue-600 outline-none h-24 resize-none"
-          />
+          <section>
+            <label className="text-[10px] font-black text-zinc-600 uppercase mb-2 block tracking-widest">Short Summary</label>
+            <textarea
+              placeholder="Brief description for the pipeline card..."
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              className="w-full bg-zinc-900 border-none rounded-2xl p-4 text-sm font-medium placeholder-zinc-700 outline-none focus:ring-2 focus:ring-[#526DF1]/50 min-h-[80px] resize-none"
+            />
+          </section>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="text-xs font-semibold text-zinc-500 mb-1 block">Channel</label>
-              <select
-                value={channelId}
-                onChange={(e) => setChannelId(e.target.value)}
-                className="w-full bg-zinc-800 border-none rounded-xl p-3 text-zinc-100 outline-none appearance-none"
-              >
-                {channels.map(ch => (
-                  <option key={ch.id} value={ch.id}>{ch.name}</option>
-                ))}
-              </select>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="relative">
+              <label className="text-[10px] font-black text-zinc-600 uppercase mb-2 block tracking-widest">Channel</label>
+              <div className="relative">
+                <select
+                  value={channelId}
+                  onChange={(e) => setChannelId(e.target.value)}
+                  className="w-full bg-zinc-900 border-none rounded-2xl p-3 px-4 text-sm font-bold appearance-none outline-none"
+                >
+                  {channels.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                </select>
+                <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-600 pointer-events-none" />
+              </div>
             </div>
-            <div>
-              <label className="text-xs font-semibold text-zinc-500 mb-1 block">Status</label>
-              <select
-                value={statusId}
-                onChange={(e) => setStatusId(e.target.value)}
-                className="w-full bg-zinc-800 border-none rounded-xl p-3 text-zinc-100 outline-none appearance-none"
-              >
-                {statuses.map(st => (
-                  <option key={st.id} value={st.id}>{st.name}</option>
-                ))}
-              </select>
+            <div className="relative">
+              <label className="text-[10px] font-black text-zinc-600 uppercase mb-2 block tracking-widest">Stage</label>
+              <div className="relative">
+                <select
+                  value={statusId}
+                  onChange={(e) => setStatusId(e.target.value)}
+                  className="w-full bg-zinc-900 border-none rounded-2xl p-3 px-4 text-sm font-bold appearance-none outline-none"
+                >
+                  {statuses.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                </select>
+                <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-600 pointer-events-none" />
+              </div>
             </div>
           </div>
 
-          <div className="flex items-center space-x-3">
-            <div className="flex-1">
-              <label className="text-xs font-semibold text-zinc-500 mb-1 block">Scheduled Date</label>
-              <div className="relative">
-                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" size={16} />
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="text-[10px] font-black text-zinc-600 uppercase mb-2 block tracking-widest">Date</label>
+              <div className="flex items-center bg-zinc-900 rounded-2xl p-3 px-4">
+                <Calendar size={18} className="text-[#526DF1] mr-3" />
                 <input
                   type="date"
                   value={scheduledDate}
                   onChange={(e) => setScheduledDate(e.target.value)}
-                  className="w-full bg-zinc-800 border-none rounded-xl p-3 pl-10 text-zinc-100 outline-none"
+                  className="bg-transparent border-none text-sm font-bold w-full outline-none invert dark:invert-0"
                 />
               </div>
             </div>
             <div>
-              <label className="text-xs font-semibold text-zinc-500 mb-1 block">Priority</label>
-              <div className="flex bg-zinc-800 rounded-xl p-1">
+              <label className="text-[10px] font-black text-zinc-600 uppercase mb-2 block tracking-widest">Priority</label>
+              <div className="flex bg-zinc-900 rounded-2xl p-1">
                 {(['Low', 'Medium', 'High'] as Priority[]).map(p => (
                   <button
                     key={p}
                     onClick={() => setPriority(p)}
-                    className={`px-3 py-2 text-xs rounded-lg transition-colors ${priority === p ? 'bg-zinc-700 text-white font-bold' : 'text-zinc-500'}`}
+                    className={`flex-1 py-2 text-[10px] font-black rounded-xl transition-all ${priority === p ? 'bg-[#526DF1] text-white shadow-lg shadow-[#526DF1]/20' : 'text-zinc-600'}`}
                   >
                     {p}
                   </button>
@@ -137,26 +150,35 @@ const IdeaModal: React.FC<IdeaModalProps> = ({
               </div>
             </div>
           </div>
+
+          <section>
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">Production Notes / Script</label>
+              <AlignLeft size={14} className="text-zinc-700" />
+            </div>
+            <textarea
+              placeholder="Start drafting your script or list equipment needs here..."
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              className="w-full bg-zinc-900 border-none rounded-2xl p-4 text-sm font-medium placeholder-zinc-700 outline-none focus:ring-2 focus:ring-[#526DF1]/50 min-h-[160px] leading-relaxed"
+            />
+          </section>
         </div>
 
-        <div className="flex items-center mt-8 space-x-3">
+        <div className="flex items-center mt-10 space-x-4 sticky bottom-0 pt-4 bg-[#16191F]">
           {onDelete && (
-            <button
-              onClick={onDelete}
-              className="flex-shrink-0 bg-red-900/20 text-red-500 p-4 rounded-xl active:bg-red-900/40"
-            >
+            <button onClick={onDelete} className="p-4 bg-red-500/10 text-red-500 rounded-3xl active:scale-90 transition-transform">
               <Trash2 size={24} />
             </button>
           )}
           <button
             onClick={handleSave}
             disabled={!title.trim()}
-            className="flex-1 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-bold py-4 rounded-xl shadow-lg shadow-blue-900/20 active:scale-95 transition-all"
+            className="flex-1 bg-[#526DF1] text-white font-black py-5 rounded-[28px] shadow-xl shadow-[#526DF1]/30 active:scale-95 transition-all disabled:opacity-30"
           >
-            {initialIdea ? 'Save Changes' : 'Quick Save'}
+            {initialIdea ? 'Update Production' : 'Create Entry'}
           </button>
         </div>
-        <div className="h-4" />
       </div>
     </div>
   );

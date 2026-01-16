@@ -19,12 +19,14 @@ export interface Idea {
   id: string;
   title: string;
   description: string;
+  notes?: string;
   channelId: string;
   statusId: string;
   scheduledDate?: string; // ISO string
   priority: Priority;
   tags: string[];
   createdAt: string;
+  updatedAt?: string;
   isDeleted: boolean;
 }
 
