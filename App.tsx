@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Home, LayoutGrid, Calendar as CalendarIcon, Settings as SettingsIcon, Plus, Loader2 } from 'lucide-react';
 import { ViewType, Idea, Channel, Status, UserProfile } from './types.ts';
@@ -32,19 +31,54 @@ const App: React.FC = () => {
     type: 'soft' | 'permanent' | 'empty-bin';
   }>({ isOpen: false, ideaId: null, type: 'soft' });
 
+  // Handle Browser/Mobile History
+  useEffect(() => {
+    const handlePopState = (event: PopStateEvent) => {
+      const state = event.state;
+      if (state) {
+        setCurrentView(state.view || 'Home');
+        setSelectedIdeaId(state.ideaId || null);
+      } else {
+        setCurrentView('Home');
+        setSelectedIdeaId(null);
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    
+    // Set initial history state
+    if (!window.history.state) {
+      window.history.replaceState({ view: 'Home', ideaId: null }, '');
+    }
+
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  const navigateToView = useCallback((view: ViewType) => {
+    if (view === currentView && !selectedIdeaId) return;
+    setCurrentView(view);
+    setSelectedIdeaId(null);
+    window.history.pushState({ view, ideaId: null }, '');
+  }, [currentView, selectedIdeaId]);
+
+  const navigateToIdea = useCallback((idea: Idea) => {
+    setSelectedIdeaId(idea.id);
+    window.history.pushState({ view: currentView, ideaId: idea.id }, '');
+  }, [currentView]);
+
+  const handleBackNavigation = useCallback(() => {
+    window.history.back();
+  }, []);
+
   // Advanced keyboard detection for mobile devices
   useEffect(() => {
-    // 1. Detect via Visual Viewport (Height change)
     const handleViewportChange = () => {
       if (window.visualViewport) {
-        // If the visible height is significantly less than the total window height,
-        // it's a very strong indicator that the keyboard is open.
         const isLikelyKeyboard = window.visualViewport.height < window.innerHeight * 0.85;
         setIsKeyboardVisible(isLikelyKeyboard);
       }
     };
 
-    // 2. Detect via Focus events (Immediate reaction)
     const handleFocusIn = (e: FocusEvent) => {
       const target = e.target as HTMLElement;
       if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) {
@@ -53,17 +87,14 @@ const App: React.FC = () => {
     };
 
     const handleFocusOut = (e: FocusEvent) => {
-      // Delay slightly to check if focus moved to another input
-      // This prevents the bottom bar from jumping if user taps "Next" on keyboard
       setTimeout(() => {
         const activeTag = document.activeElement?.tagName;
         if (activeTag !== 'INPUT' && activeTag !== 'TEXTAREA' && !document.activeElement?.getAttribute('contenteditable')) {
-          handleViewportChange(); // Double check viewport before hiding
+          handleViewportChange();
         }
       }, 150);
     };
 
-    // Listeners
     if (window.visualViewport) {
       window.visualViewport.addEventListener('resize', handleViewportChange);
       window.visualViewport.addEventListener('scroll', handleViewportChange);
@@ -214,7 +245,6 @@ const App: React.FC = () => {
       status_id: newIdea.statusId,
       priority: newIdea.priority,
       tags: newIdea.tags || [],
-      // Fix: Use scheduledDate instead of scheduled_date to match the Idea type
       scheduled_date: newIdea.scheduledDate || null,
       is_deleted: false,
       user_id: session.user.id,
@@ -270,7 +300,7 @@ const App: React.FC = () => {
           idea={currentDetailIdea}
           channel={channels.find(c => c.id === currentDetailIdea.channelId)}
           status={statuses.find(s => s.id === currentDetailIdea.statusId)}
-          onBack={() => setSelectedIdeaId(null)}
+          onBack={handleBackNavigation}
           onEdit={() => { setEditingIdea(currentDetailIdea); setIsModalOpen(true); }}
           onDelete={() => setConfirmModal({ isOpen: true, ideaId: currentDetailIdea.id, type: 'soft' })}
         />
@@ -278,9 +308,9 @@ const App: React.FC = () => {
     }
 
     switch (currentView) {
-      case 'Home': return <HomePage userProfile={userProfile || { id: '', displayName: 'User' }} ideas={activeIdeas} statuses={statuses} onIdeaClick={(i) => setSelectedIdeaId(i.id)} channels={channels} />;
-      case 'Channels': return <ChannelsPage ideas={activeIdeas} channels={channels} statuses={statuses} onIdeaClick={(i) => setSelectedIdeaId(i.id)} />;
-      case 'Calendar': return <CalendarPage ideas={activeIdeas} channels={channels} onIdeaClick={(i) => setSelectedIdeaId(i.id)} />;
+      case 'Home': return <HomePage userProfile={userProfile || { id: '', displayName: 'User' }} ideas={activeIdeas} statuses={statuses} onIdeaClick={navigateToIdea} channels={channels} />;
+      case 'Channels': return <ChannelsPage ideas={activeIdeas} channels={channels} statuses={statuses} onIdeaClick={navigateToIdea} />;
+      case 'Calendar': return <CalendarPage ideas={activeIdeas} channels={channels} onIdeaClick={navigateToIdea} />;
       case 'Settings': return (
         <SettingsPage 
           userProfile={userProfile || { id: '', displayName: 'User' }}
@@ -292,7 +322,7 @@ const App: React.FC = () => {
           restoreIdea={(id) => supabase.from('ideas').update({ is_deleted: false }).eq('id', id).then(() => fetchData(session.user.id))} 
           permanentlyDeleteIdea={(id) => setConfirmModal({ isOpen: true, ideaId: id, type: 'permanent' })} 
           emptyBin={() => setConfirmModal({ isOpen: true, ideaId: null, type: 'empty-bin' })}
-          onNavigate={setCurrentView}
+          onNavigate={navigateToView}
           onAddChannel={(c) => supabase.from('channels').insert([{...c, user_id: session.user.id}]).then(() => fetchData(session.user.id))}
           onUpdateChannel={(id, c) => supabase.from('channels').update(c).eq('id', id).then(() => fetchData(session.user.id))}
           onDeleteChannel={(id) => supabase.from('channels').delete().eq('id', id).then(() => fetchData(session.user.id))}
@@ -318,11 +348,11 @@ const App: React.FC = () => {
             </button>
           </div>
           <nav className="fixed bottom-0 left-0 right-0 h-24 bg-[#16191F]/95 backdrop-blur-xl border-t border-white/5 flex items-center justify-around px-2 z-40 max-w-md mx-auto rounded-t-[40px]">
-            <NavButton active={currentView === 'Home'} onClick={() => setCurrentView('Home')} icon={<Home size={22} />} label="Home" />
-            <NavButton active={currentView === 'Channels'} onClick={() => setCurrentView('Channels')} icon={<LayoutGrid size={22} />} label="Channels" />
+            <NavButton active={currentView === 'Home'} onClick={() => navigateToView('Home')} icon={<Home size={22} />} label="Home" />
+            <NavButton active={currentView === 'Channels'} onClick={() => navigateToView('Channels')} icon={<LayoutGrid size={22} />} label="Channels" />
             <div className="w-16" />
-            <NavButton active={currentView === 'Calendar'} onClick={() => setCurrentView('Calendar')} icon={<CalendarIcon size={22} />} label="Calendar" />
-            <NavButton active={currentView === 'Settings'} onClick={() => setCurrentView('Settings')} icon={<SettingsIcon size={22} />} label="Settings" />
+            <NavButton active={currentView === 'Calendar'} onClick={() => navigateToView('Calendar')} icon={<CalendarIcon size={22} />} label="Calendar" />
+            <NavButton active={currentView === 'Settings'} onClick={() => navigateToView('Settings')} icon={<SettingsIcon size={22} />} label="Settings" />
           </nav>
         </>
       )}
