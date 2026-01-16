@@ -3,9 +3,10 @@ import {
   User, Youtube, Workflow, Trash2, 
   Shield, Bell, Palette, HelpCircle, 
   RotateCcw, LogOut, ChevronRight, XCircle,
-  Plus, Edit2, Check, X, FolderClosed, Layers, Sparkles, Camera, Loader2
+  Plus, Edit2, Check, X, FolderClosed, Layers, Sparkles, Camera, Loader2, Lock, ShieldCheck
 } from 'lucide-react';
 import { Idea, ViewType, Channel, Status, UserProfile } from '../types';
+import { supabase } from '../services/supabase';
 
 interface SettingsProps {
   userProfile: UserProfile;
@@ -33,6 +34,8 @@ const SettingsPage: React.FC<SettingsProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState<'main' | 'trash' | 'channels' | 'pipeline' | 'profile'>('main');
   const [isSaving, setIsSaving] = useState(false);
+  const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
+  const [passwordStatus, setPasswordStatus] = useState<{ type: 'success' | 'error' | null, message: string }>({ type: null, message: '' });
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Profile State
@@ -40,6 +43,10 @@ const SettingsPage: React.FC<SettingsProps> = ({
     displayName: userProfile.displayName, 
     avatarUrl: userProfile.avatarUrl || '' 
   });
+
+  // Password State
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
 
   // Channel State
   const [editingChannelId, setEditingChannelId] = useState<string | null>(null);
@@ -65,6 +72,26 @@ const SettingsPage: React.FC<SettingsProps> = ({
     await updateProfile(profileForm);
     setIsSaving(false);
     setActiveTab('main');
+  };
+
+  const handleUpdatePassword = async () => {
+    if (!newPassword || newPassword !== confirmPassword) return;
+    
+    setIsUpdatingPassword(true);
+    setPasswordStatus({ type: null, message: '' });
+
+    try {
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      if (error) throw error;
+      
+      setPasswordStatus({ type: 'success', message: 'Password updated successfully!' });
+      setNewPassword('');
+      setConfirmPassword('');
+    } catch (err: any) {
+      setPasswordStatus({ type: 'error', message: err.message });
+    } finally {
+      setIsUpdatingPassword(false);
+    }
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -110,7 +137,7 @@ const SettingsPage: React.FC<SettingsProps> = ({
         <button onClick={() => setActiveTab('main')} className="mb-6 flex items-center text-zinc-500 font-bold">
           <ChevronRight className="rotate-180 mr-1" size={20} /> Settings
         </button>
-        <h1 className="text-3xl font-black mb-10">Edit Profile</h1>
+        <h1 className="text-3xl font-black mb-10">Creator Identity</h1>
 
         <div className="flex flex-col items-center mb-10">
           <div className="relative group">
@@ -135,29 +162,84 @@ const SettingsPage: React.FC<SettingsProps> = ({
               onChange={handleFileChange} 
             />
           </div>
-          <p className="mt-4 text-[10px] font-black text-zinc-600 uppercase tracking-widest">Update Creator Identity</p>
+          <p className="mt-4 text-[10px] font-black text-zinc-600 uppercase tracking-widest">Update Creator Hub</p>
         </div>
 
-        <div className="space-y-6">
-          <section>
-            <label className="text-[10px] font-black text-zinc-600 uppercase mb-2 block tracking-widest px-2">Production Handle</label>
-            <input 
-              type="text" 
-              value={profileForm.displayName}
-              onChange={e => setProfileForm(p => ({ ...p, displayName: e.target.value }))}
-              placeholder="e.g. My Channel Studio"
-              className="w-full bg-[#1C1F26] border border-white/5 rounded-2xl p-5 text-lg font-bold text-white outline-none focus:ring-2 focus:ring-[#00db9a]/50"
-            />
+        <div className="space-y-10">
+          {/* Identity Section */}
+          <section className="space-y-6">
+            <div>
+              <label className="text-[10px] font-black text-zinc-600 uppercase mb-2 block tracking-widest px-2">Display Name</label>
+              <input 
+                type="text" 
+                value={profileForm.displayName}
+                onChange={e => setProfileForm(p => ({ ...p, displayName: e.target.value }))}
+                placeholder="e.g. My Channel Studio"
+                className="w-full bg-[#1C1F26] border border-white/5 rounded-2xl p-5 text-lg font-bold text-white outline-none focus:ring-2 focus:ring-[#00db9a]/50"
+              />
+            </div>
+
+            <button 
+              onClick={handleSaveProfile}
+              disabled={isSaving}
+              className="w-full bg-[#00db9a] text-black py-5 rounded-[28px] font-black text-lg shadow-xl shadow-[#00db9a]/30 active:scale-95 transition-all flex items-center justify-center space-x-3 disabled:opacity-50"
+            >
+              {isSaving ? <Loader2 className="animate-spin" size={20} /> : <Check size={20} />}
+              <span>{isSaving ? 'Saving Changes...' : 'Save Identity'}</span>
+            </button>
           </section>
 
-          <button 
-            onClick={handleSaveProfile}
-            disabled={isSaving}
-            className="w-full bg-[#00db9a] text-black py-5 rounded-[28px] font-black text-lg shadow-xl shadow-[#00db9a]/30 active:scale-95 transition-all flex items-center justify-center space-x-3 disabled:opacity-50"
-          >
-            {isSaving ? <Loader2 className="animate-spin" size={20} /> : <Check size={20} />}
-            <span>{isSaving ? 'Saving Changes...' : 'Save Production Hub'}</span>
-          </button>
+          {/* Password Section */}
+          <section className="pt-8 border-t border-white/5 space-y-6">
+            <div className="flex items-center space-x-2 px-2">
+              <ShieldCheck size={16} className="text-zinc-600" />
+              <h3 className="text-[11px] font-black text-zinc-600 uppercase tracking-[0.2em]">Security Upgrade</h3>
+            </div>
+
+            <div className="space-y-4">
+              <div className="relative group">
+                <div className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-600 group-focus-within:text-[#00db9a] transition-colors">
+                  <Lock size={16} />
+                </div>
+                <input 
+                  type="password"
+                  value={newPassword}
+                  onChange={e => setNewPassword(e.target.value)}
+                  placeholder="New Password"
+                  className="w-full bg-[#1C1F26] border border-white/5 rounded-2xl p-5 pl-14 text-sm font-bold text-white outline-none focus:ring-2 focus:ring-[#00db9a]/50 transition-all placeholder:text-zinc-700"
+                />
+              </div>
+
+              <div className="relative group">
+                <div className="absolute left-5 top-1/2 -translate-y-1/2 text-zinc-600 group-focus-within:text-[#00db9a] transition-colors">
+                  <ShieldCheck size={16} />
+                </div>
+                <input 
+                  type="password"
+                  value={confirmPassword}
+                  onChange={e => setConfirmPassword(e.target.value)}
+                  placeholder="Confirm New Password"
+                  className="w-full bg-[#1C1F26] border border-white/5 rounded-2xl p-5 pl-14 text-sm font-bold text-white outline-none focus:ring-2 focus:ring-[#00db9a]/50 transition-all placeholder:text-zinc-700"
+                />
+              </div>
+
+              {passwordStatus.type && (
+                <div className={`p-4 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center space-x-2 ${passwordStatus.type === 'success' ? 'bg-green-500/10 text-green-500 border border-green-500/20' : 'bg-red-500/10 text-red-500 border border-red-500/20'}`}>
+                  {passwordStatus.type === 'success' ? <Check size={14} /> : <XCircle size={14} />}
+                  <span>{passwordStatus.message}</span>
+                </div>
+              )}
+
+              <button 
+                onClick={handleUpdatePassword}
+                disabled={isUpdatingPassword || !newPassword || newPassword !== confirmPassword}
+                className="w-full bg-white text-black py-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl active:scale-95 transition-all flex items-center justify-center space-x-3 disabled:opacity-30"
+              >
+                {isUpdatingPassword ? <Loader2 className="animate-spin" size={16} /> : <Shield size={16} />}
+                <span>Update Password</span>
+              </button>
+            </div>
+          </section>
         </div>
       </div>
     );
@@ -254,7 +336,7 @@ const SettingsPage: React.FC<SettingsProps> = ({
         <section>
           <h3 className="text-[11px] font-extrabold text-zinc-600 uppercase tracking-widest mb-6 px-2">Studio Setup</h3>
           <div className="grid grid-cols-4 gap-y-8">
-            <IconButton icon={<User className="text-[#00db9a]" />} label="Profile" onClick={() => setActiveTab('profile')} />
+            <IconButton icon={<User className="text-[#00db9a]" />} label="Profile" onClick={() => { setProfileForm({ displayName: userProfile.displayName, avatarUrl: userProfile.avatarUrl || '' }); setActiveTab('profile'); }} />
             <IconButton icon={<Youtube className="text-[#FF0000]" />} label="Channels" onClick={() => setActiveTab('channels')} />
             <IconButton icon={<Workflow className="text-emerald-500" />} label="Pipeline" onClick={() => setActiveTab('pipeline')} />
             <IconButton icon={<Trash2 className="text-orange-500" />} label="Bin" onClick={() => setActiveTab('trash')} />
@@ -266,7 +348,7 @@ const SettingsPage: React.FC<SettingsProps> = ({
           <div className="grid grid-cols-4 gap-y-8">
             <IconButton icon={<Bell className="text-yellow-500" />} label="Alerts" onClick={() => {}} />
             <IconButton icon={<Palette className="text-purple-500" />} label="Themes" onClick={() => {}} />
-            <IconButton icon={<Shield className="text-teal-500" />} label="Security" onClick={() => {}} />
+            <IconButton icon={<Shield className="text-teal-500" />} label="Security" onClick={() => { setProfileForm({ displayName: userProfile.displayName, avatarUrl: userProfile.avatarUrl || '' }); setActiveTab('profile'); }} />
             <IconButton icon={<XCircle className="text-zinc-600" />} label="Reset" onClick={() => { if (confirm('Clear local cache and reload?')) { localStorage.clear(); window.location.reload(); } }} />
           </div>
         </section>
