@@ -118,24 +118,24 @@ const IdeaDetailsPage: React.FC<IdeaDetailsProps> = ({
         </div>
       </section>
 
-      {/* Action Footer */}
-      <div className="fixed bottom-0 left-0 right-0 p-6 bg-[#0F1115]/95 backdrop-blur-xl border-t border-white/5 z-[100] max-w-md mx-auto">
-        <div className="flex space-x-4">
+      {/* Action Footer - Resized for mobile */}
+      <div className="fixed bottom-0 left-0 right-0 p-4 bg-[#0F1115]/95 backdrop-blur-xl border-t border-white/5 z-[50] max-w-md mx-auto rounded-t-[32px]">
+        <div className="flex space-x-3">
           <button 
             type="button"
             onClick={handleDelete}
-            className="w-16 h-16 bg-red-500/10 text-red-500 rounded-[24px] border border-red-500/20 flex items-center justify-center active:scale-90 transition-transform hover:bg-red-500/20"
+            className="w-14 h-14 bg-red-500/10 text-red-500 rounded-[20px] border border-red-500/20 flex items-center justify-center active:scale-90 transition-transform hover:bg-red-500/20 flex-shrink-0"
             aria-label="Move to Bin"
           >
-            <Trash2 size={24} />
+            <Trash2 size={20} />
           </button>
           <button 
             type="button"
             onClick={onEdit}
-            className="flex-1 bg-[#00db9a] text-black rounded-[24px] flex items-center justify-center space-x-2 font-black shadow-xl shadow-[#00db9a]/30 active:scale-95 transition-all"
+            className="flex-1 h-14 bg-[#00db9a] text-black rounded-[20px] flex items-center justify-center space-x-2 font-black shadow-lg shadow-[#00db9a]/20 active:scale-95 transition-all"
           >
-            <Edit2 size={20} />
-            <span>Edit Production</span>
+            <Edit2 size={18} />
+            <span className="text-sm tracking-tight">Edit Production</span>
           </button>
         </div>
       </div>

@@ -176,24 +176,37 @@ const App: React.FC = () => {
     }
 
     try {
-      if (editingIdea) await supabase.from('ideas').update(payload).eq('id', editingIdea.id);
-      else await supabase.from('ideas').insert([payload]);
+      if (editingIdea) {
+        const { error } = await supabase.from('ideas').update(payload).eq('id', editingIdea.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from('ideas').insert([payload]);
+        if (error) throw error;
+      }
       setIsModalOpen(false);
       setEditingIdea(null);
       await fetchData(session.user.id);
-    } catch (e) { console.error(e); }
+    } catch (e) { 
+      console.error(e); 
+      alert("Error saving idea. Please check your connection.");
+    }
   };
 
   const handleConfirmAction = async () => {
     if (!session) return;
     const { ideaId, type } = confirmModal;
-    if (type === 'soft' && ideaId) await supabase.from('ideas').update({ is_deleted: true }).eq('id', ideaId);
-    else if (type === 'permanent' && ideaId) await supabase.from('ideas').delete().eq('id', ideaId);
-    else if (type === 'empty-bin') await supabase.from('ideas').delete().eq('is_deleted', true);
-    setConfirmModal({ isOpen: false, ideaId: null, type: 'soft' });
-    setIsModalOpen(false);
-    setSelectedIdeaId(null);
-    await fetchData(session.user.id);
+    try {
+      if (type === 'soft' && ideaId) await supabase.from('ideas').update({ is_deleted: true }).eq('id', ideaId);
+      else if (type === 'permanent' && ideaId) await supabase.from('ideas').delete().eq('id', ideaId);
+      else if (type === 'empty-bin') await supabase.from('ideas').delete().eq('is_deleted', true);
+      
+      setConfirmModal({ isOpen: false, ideaId: null, type: 'soft' });
+      setIsModalOpen(false);
+      setSelectedIdeaId(null);
+      await fetchData(session.user.id);
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   const renderContent = () => {
