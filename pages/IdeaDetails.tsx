@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { 
   ChevronLeft, Youtube, Layers, Calendar, 
@@ -20,10 +19,18 @@ interface IdeaDetailsProps {
 const IdeaDetailsPage: React.FC<IdeaDetailsProps> = ({ 
   idea, channel, status, onBack, onEdit, onDelete 
 }) => {
+  
+  const handleDelete = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onDelete();
+  };
+
   return (
-    <div className="animate-in slide-in-from-right duration-300 pb-20">
+    <div className="animate-in slide-in-from-right duration-300 pb-32">
       {/* Header Navigation */}
       <button 
+        type="button"
         onClick={onBack} 
         className="mb-6 flex items-center text-zinc-500 font-bold hover:text-white transition-colors"
       >
@@ -35,7 +42,7 @@ const IdeaDetailsPage: React.FC<IdeaDetailsProps> = ({
       <div className="relative overflow-hidden bg-[#1C1F26] rounded-[40px] border border-white/5 p-8 mb-8">
         <div 
           className="absolute top-0 right-0 w-48 h-48 blur-[80px] opacity-20" 
-          style={{ backgroundColor: channel?.color || '#526DF1' }} 
+          style={{ backgroundColor: channel?.color || '#00db9a' }} 
         />
         
         <div className="relative z-10">
@@ -75,7 +82,7 @@ const IdeaDetailsPage: React.FC<IdeaDetailsProps> = ({
           icon={<Calendar size={18} />} 
           label="Deadline" 
           value={idea.scheduledDate ? format(new Date(idea.scheduledDate), 'MMM d, yyyy') : 'TBD'} 
-          color="#526DF1"
+          color="#00db9a"
         />
         <DetailCard 
           icon={<AlertCircle size={18} />} 
@@ -100,8 +107,9 @@ const IdeaDetailsPage: React.FC<IdeaDetailsProps> = ({
             <div className="h-full flex flex-col items-center justify-center text-zinc-700 space-y-3 py-10">
               <p className="text-sm font-bold italic">No production notes yet.</p>
               <button 
+                type="button"
                 onClick={onEdit}
-                className="text-xs font-black text-[#526DF1] uppercase flex items-center"
+                className="text-xs font-black text-[#00db9a] uppercase flex items-center"
               >
                 Add Notes <ArrowRight size={12} className="ml-1" />
               </button>
@@ -111,20 +119,23 @@ const IdeaDetailsPage: React.FC<IdeaDetailsProps> = ({
       </section>
 
       {/* Action Footer */}
-      <div className="fixed bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-[#0F1115] via-[#0F1115] to-transparent pointer-events-none z-50 max-w-md mx-auto">
-        <div className="flex space-x-4 pointer-events-auto">
+      <div className="fixed bottom-0 left-0 right-0 p-6 bg-[#0F1115]/95 backdrop-blur-xl border-t border-white/5 z-[100] max-w-md mx-auto">
+        <div className="flex space-x-4">
           <button 
-            onClick={onDelete}
-            className="w-16 h-16 bg-red-500/10 text-red-500 rounded-[24px] border border-red-500/20 flex items-center justify-center active:scale-90 transition-transform"
+            type="button"
+            onClick={handleDelete}
+            className="w-16 h-16 bg-red-500/10 text-red-500 rounded-[24px] border border-red-500/20 flex items-center justify-center active:scale-90 transition-transform hover:bg-red-500/20"
+            aria-label="Move to Bin"
           >
             <Trash2 size={24} />
           </button>
           <button 
+            type="button"
             onClick={onEdit}
-            className="flex-1 bg-[#526DF1] text-white rounded-[24px] flex items-center justify-center space-x-2 font-black shadow-xl shadow-[#526DF1]/30 active:scale-95 transition-all"
+            className="flex-1 bg-[#00db9a] text-black rounded-[24px] flex items-center justify-center space-x-2 font-black shadow-xl shadow-[#00db9a]/30 active:scale-95 transition-all"
           >
             <Edit2 size={20} />
-            <span>Modify Production</span>
+            <span>Edit Production</span>
           </button>
         </div>
       </div>

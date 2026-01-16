@@ -1,9 +1,11 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#0F1115">
     <title>CreatorFlow</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -28,7 +30,31 @@
             display: none;
         }
         .active-tab-glow {
-            box-shadow: 0 0 15px rgba(59, 130, 246, 0.3);
+            box-shadow: 0 0 15px rgba(0, 219, 154, 0.4);
+        }
+        .neon-btn {
+            background-color: #00db9a;
+            color: #000;
+            box-shadow: 0 10px 30px rgba(0, 219, 154, 0.2);
+        }
+        .neon-btn:active {
+            transform: scale(0.96);
+        }
+        .auth-input {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1.5px solid rgba(255, 255, 255, 0.05);
+            color: white;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .auth-input:focus {
+            border-color: #00db9a;
+            background: rgba(255, 255, 255, 0.05);
+            box-shadow: 0 0 25px rgba(0, 219, 154, 0.1);
+        }
+        .orb-bg {
+            background: radial-gradient(circle, #00db9a 0%, transparent 70%);
+            filter: blur(60px);
+            opacity: 0.15;
         }
     </style>
 <script type="importmap">

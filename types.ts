@@ -1,4 +1,3 @@
-
 export type Priority = 'Low' | 'Medium' | 'High';
 
 export interface Status {
@@ -15,6 +14,12 @@ export interface Channel {
   icon: string;
 }
 
+export interface UserProfile {
+  id: string;
+  displayName: string;
+  avatarUrl?: string;
+}
+
 export interface Idea {
   id: string;
   title: string;
@@ -27,6 +32,7 @@ export interface Idea {
   tags: string[];
   createdAt: string;
   updatedAt?: string;
+  completedAt?: string; // Track when it was moved to 'Upload'
   isDeleted: boolean;
 }
 

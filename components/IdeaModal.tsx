@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { X, Calendar, Trash2, ChevronDown, AlignLeft } from 'lucide-react';
 import { Idea, Channel, Status, Priority } from '../types';
@@ -79,7 +78,7 @@ const IdeaModal: React.FC<IdeaModalProps> = ({
               placeholder="What's the topic?"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full bg-zinc-900 border-none rounded-2xl p-4 text-lg font-bold placeholder-zinc-700 outline-none focus:ring-2 focus:ring-[#526DF1]/50"
+              className="w-full bg-zinc-900 border-none rounded-2xl p-4 text-lg font-bold placeholder-zinc-700 outline-none focus:ring-2 focus:ring-[#00db9a]/50"
             />
           </section>
 
@@ -89,7 +88,7 @@ const IdeaModal: React.FC<IdeaModalProps> = ({
               placeholder="Brief description for the pipeline card..."
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="w-full bg-zinc-900 border-none rounded-2xl p-4 text-sm font-medium placeholder-zinc-700 outline-none focus:ring-2 focus:ring-[#526DF1]/50 min-h-[80px] resize-none"
+              className="w-full bg-zinc-900 border-none rounded-2xl p-4 text-sm font-medium placeholder-zinc-700 outline-none focus:ring-2 focus:ring-[#00db9a]/50 min-h-[80px] resize-none"
             />
           </section>
 
@@ -126,7 +125,7 @@ const IdeaModal: React.FC<IdeaModalProps> = ({
             <div>
               <label className="text-[10px] font-black text-zinc-600 uppercase mb-2 block tracking-widest">Date</label>
               <div className="flex items-center bg-zinc-900 rounded-2xl p-3 px-4">
-                <Calendar size={18} className="text-[#526DF1] mr-3" />
+                <Calendar size={18} className="text-[#00db9a] mr-3" />
                 <input
                   type="date"
                   value={scheduledDate}
@@ -142,7 +141,7 @@ const IdeaModal: React.FC<IdeaModalProps> = ({
                   <button
                     key={p}
                     onClick={() => setPriority(p)}
-                    className={`flex-1 py-2 text-[10px] font-black rounded-xl transition-all ${priority === p ? 'bg-[#526DF1] text-white shadow-lg shadow-[#526DF1]/20' : 'text-zinc-600'}`}
+                    className={`flex-1 py-2 text-[10px] font-black rounded-xl transition-all ${priority === p ? 'bg-[#00db9a] text-black shadow-lg shadow-[#00db9a]/20' : 'text-zinc-600'}`}
                   >
                     {p}
                   </button>
@@ -160,7 +159,7 @@ const IdeaModal: React.FC<IdeaModalProps> = ({
               placeholder="Start drafting your script or list equipment needs here..."
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              className="w-full bg-zinc-900 border-none rounded-2xl p-4 text-sm font-medium placeholder-zinc-700 outline-none focus:ring-2 focus:ring-[#526DF1]/50 min-h-[160px] leading-relaxed"
+              className="w-full bg-zinc-900 border-none rounded-2xl p-4 text-sm font-medium placeholder-zinc-700 outline-none focus:ring-2 focus:ring-[#00db9a]/50 min-h-[160px] leading-relaxed"
             />
           </section>
         </div>
@@ -174,7 +173,7 @@ const IdeaModal: React.FC<IdeaModalProps> = ({
           <button
             onClick={handleSave}
             disabled={!title.trim()}
-            className="flex-1 bg-[#526DF1] text-white font-black py-5 rounded-[28px] shadow-xl shadow-[#526DF1]/30 active:scale-95 transition-all disabled:opacity-30"
+            className="flex-1 bg-[#00db9a] text-black font-black py-5 rounded-[28px] shadow-xl shadow-[#00db9a]/30 active:scale-95 transition-all disabled:opacity-30"
           >
             {initialIdea ? 'Update Production' : 'Create Entry'}
           </button>

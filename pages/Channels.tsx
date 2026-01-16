@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Youtube, ChevronRight, Hash, Filter } from 'lucide-react';
 import { Idea, Channel, Status } from '../types';
@@ -68,8 +67,7 @@ const ChannelsPage: React.FC<ChannelsProps> = ({ ideas, channels, statuses, onId
               key={idea.id} 
               idea={idea} 
               onClick={() => onIdeaClick(idea)}
-              channelName={selectedChannel.name}
-              channelColor={selectedChannel.color}
+              channel={selectedChannel}
             />
           ))}
           {channelIdeas.length === 0 && (
