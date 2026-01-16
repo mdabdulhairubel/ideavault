@@ -1,16 +1,16 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Home, LayoutGrid, Calendar as CalendarIcon, Settings as SettingsIcon, Plus, Loader2 } from 'lucide-react';
-import { ViewType, Idea, Channel, Status, UserProfile } from './types';
-import { supabase } from './services/supabase';
-import { DEFAULT_STATUSES, DEFAULT_CHANNELS } from './constants';
-import HomePage from './pages/Home';
-import ChannelsPage from './pages/Channels';
-import CalendarPage from './pages/Calendar';
-import SettingsPage from './pages/Settings';
-import IdeaDetailsPage from './pages/IdeaDetails';
-import AuthPage from './pages/Auth';
-import IdeaModal from './components/IdeaModal';
-import ConfirmationModal from './components/ConfirmationModal';
+import { ViewType, Idea, Channel, Status, UserProfile } from './types.ts';
+import { supabase } from './services/supabase.ts';
+import { DEFAULT_STATUSES, DEFAULT_CHANNELS } from './constants.tsx';
+import HomePage from './pages/Home.tsx';
+import ChannelsPage from './pages/Channels.tsx';
+import CalendarPage from './pages/Calendar.tsx';
+import SettingsPage from './pages/Settings.tsx';
+import IdeaDetailsPage from './pages/IdeaDetails.tsx';
+import AuthPage from './pages/Auth.tsx';
+import IdeaModal from './components/IdeaModal.tsx';
+import ConfirmationModal from './components/ConfirmationModal.tsx';
 
 const App: React.FC = () => {
   const [session, setSession] = useState<any>(null);
@@ -44,7 +44,6 @@ const App: React.FC = () => {
         supabase.from('profiles').select('*').eq('id', userId).maybeSingle()
       ]);
 
-      // Seed default statuses if user has none
       if (statusesRes.data && statusesRes.data.length === 0) {
         const { data: newStatuses } = await supabase.from('statuses').insert(
           DEFAULT_STATUSES.map(s => ({ ...s, user_id: userId }))
@@ -52,7 +51,6 @@ const App: React.FC = () => {
         if (newStatuses) statusesRes.data = newStatuses;
       }
 
-      // Seed default channels if user has none
       if (channelsRes.data && channelsRes.data.length === 0) {
         const { data: newChannels } = await supabase.from('channels').insert(
           DEFAULT_CHANNELS.map(c => ({ ...c, user_id: userId }))
