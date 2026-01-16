@@ -23,6 +23,28 @@ const IdeaModal: React.FC<IdeaModalProps> = ({
   const [priority, setPriority] = useState<Priority>('Medium');
   const [scheduledDate, setScheduledDate] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
+
+  // Advanced keyboard detection within the modal
+  useEffect(() => {
+    const handleViewportChange = () => {
+      if (window.visualViewport) {
+        // Threshold check: if viewport height drops significantly, keyboard is likely open
+        const isLikelyKeyboard = window.visualViewport.height < window.innerHeight * 0.75;
+        setIsKeyboardVisible(isLikelyKeyboard);
+      }
+    };
+
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', handleViewportChange);
+    }
+
+    return () => {
+      if (window.visualViewport) {
+        window.visualViewport.removeEventListener('resize', handleViewportChange);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (initialIdea) {
@@ -69,12 +91,12 @@ const IdeaModal: React.FC<IdeaModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-[150] flex items-end justify-center px-4 pb-4">
+    <div className={`fixed inset-0 z-[150] flex justify-center px-4 pb-4 transition-all duration-300 ${isKeyboardVisible ? 'items-start pt-10' : 'items-end'}`}>
       {/* Backdrop */}
       <div className="absolute inset-0 bg-black/90 backdrop-blur-xl animate-in fade-in duration-300" onClick={onClose} />
       
       {/* Modal Container */}
-      <div className="relative w-full max-w-md bg-[#16191F] rounded-[40px] shadow-2xl animate-in slide-in-from-bottom duration-300 border border-white/10 max-h-[90vh] flex flex-col overflow-hidden">
+      <div className={`relative w-full max-w-md bg-[#16191F] rounded-[40px] shadow-2xl animate-in slide-in-from-bottom duration-300 border border-white/10 flex flex-col overflow-hidden transition-all ${isKeyboardVisible ? 'h-[95vh]' : 'max-h-[90vh]'}`}>
         
         {/* Handle Bar */}
         <div className="flex-none pt-4 pb-2">
@@ -96,7 +118,6 @@ const IdeaModal: React.FC<IdeaModalProps> = ({
             <section>
               <label className="text-[10px] font-black text-zinc-600 uppercase mb-2 block tracking-widest px-1">Headline</label>
               <input
-                autoFocus
                 type="text"
                 placeholder="Enter video topic..."
                 value={title}
@@ -188,25 +209,27 @@ const IdeaModal: React.FC<IdeaModalProps> = ({
           </div>
         </div>
 
-        {/* Fixed Action Bar at bottom of modal */}
-        <div className="flex-none p-6 pt-4 bg-[#16191F] border-t border-white/5 shadow-[0_-10px_40px_rgba(0,0,0,0.5)]">
-          <button
-            onClick={handleSave}
-            disabled={!title.trim() || isSubmitting}
-            className="w-full h-14 bg-[#00db9a] text-black font-black rounded-[22px] shadow-lg shadow-[#00db9a]/20 active:scale-95 transition-all disabled:opacity-30 flex items-center justify-center space-x-3 group"
-          >
-            {isSubmitting ? (
-              <Loader2 size={18} className="animate-spin" />
-            ) : (
-              <>
-                <Check size={18} className="group-hover:scale-110 transition-transform" />
-                <span className="text-sm uppercase tracking-widest font-black">
-                  {initialIdea ? 'Save Changes' : 'Launch Idea'}
-                </span>
-              </>
-            )}
-          </button>
-        </div>
+        {/* Fixed Action Bar at bottom - Hidden when keyboard is visible to prevent overlap */}
+        {!isKeyboardVisible && (
+          <div className="flex-none p-6 pt-4 bg-[#16191F] border-t border-white/5 shadow-[0_-10px_40px_rgba(0,0,0,0.5)] animate-in fade-in slide-in-from-bottom duration-300">
+            <button
+              onClick={handleSave}
+              disabled={!title.trim() || isSubmitting}
+              className="w-full h-14 bg-[#00db9a] text-black font-black rounded-[22px] shadow-lg shadow-[#00db9a]/20 active:scale-95 transition-all disabled:opacity-30 flex items-center justify-center space-x-3 group"
+            >
+              {isSubmitting ? (
+                <Loader2 size={18} className="animate-spin" />
+              ) : (
+                <>
+                  <Check size={18} className="group-hover:scale-110 transition-transform" />
+                  <span className="text-sm uppercase tracking-widest font-black">
+                    {initialIdea ? 'Save Changes' : 'Launch Idea'}
+                  </span>
+                </>
+              )}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
